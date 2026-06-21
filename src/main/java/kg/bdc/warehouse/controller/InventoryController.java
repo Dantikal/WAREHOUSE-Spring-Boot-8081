@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import kg.bdc.warehouse.dto.*;
+import kg.bdc.warehouse.service.WarehouseContextService;
 import kg.bdc.warehouse.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.List;
 public class InventoryController {
 
     private final InventoryService inventoryService;
+    private final WarehouseContextService warehouseContextService;
 
     @GetMapping
     @Operation(
@@ -32,9 +35,8 @@ public class InventoryController {
                 content = @Content(schema = @Schema(implementation = InventoryDto.class)))
         }
     )
-    public ResponseEntity<List<InventoryDto>> getInventory(
-            @Parameter(description = "ID склада", example = "1", required = true)
-            @RequestParam("warehouse_id") Long warehouseId) {
+    public ResponseEntity<List<InventoryDto>> getInventory(HttpServletRequest request) {
+        Long warehouseId = warehouseContextService.requireWarehouseId(request);
         return ResponseEntity.ok(inventoryService.getInventory(warehouseId));
     }
 
@@ -48,9 +50,8 @@ public class InventoryController {
                 content = @Content(schema = @Schema(implementation = InventoryDto.class)))
         }
     )
-    public ResponseEntity<List<InventoryDto>> getLowStock(
-            @Parameter(description = "ID склада", example = "1", required = true)
-            @RequestParam("warehouse_id") Long warehouseId) {
+    public ResponseEntity<List<InventoryDto>> getLowStock(HttpServletRequest request) {
+        Long warehouseId = warehouseContextService.requireWarehouseId(request);
         return ResponseEntity.ok(inventoryService.getLowStock(warehouseId));
     }
 
@@ -63,9 +64,8 @@ public class InventoryController {
                 content = @Content(schema = @Schema(implementation = MovementDto.class)))
         }
     )
-    public ResponseEntity<List<MovementDto>> getMovements(
-            @Parameter(description = "ID склада", example = "1", required = true)
-            @RequestParam("warehouse_id") Long warehouseId) {
+    public ResponseEntity<List<MovementDto>> getMovements(HttpServletRequest request) {
+        Long warehouseId = warehouseContextService.requireWarehouseId(request);
         return ResponseEntity.ok(inventoryService.getMovements(warehouseId));
     }
 }

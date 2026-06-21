@@ -64,34 +64,51 @@ docker compose up -d
 
 ## REST API — все endpoints
 
+Base: `/api/warehouse`
+
+Для endpoints "свой склад" сервис берет склад из `X-Warehouse-Id` или JWT claim `warehouse_id` / `warehouseId`.
+Для обратной совместимости также поддерживается query `warehouse_id`.
+
 ### Склады
 ```
-GET  /api/warehouse/warehouses           — список складов
-GET  /api/warehouse/warehouses/{id}      — склад по ID
-GET  /api/warehouse/warehouses/{id}/stats — статистика склада
-GET  /api/warehouse/stats/country        — статистика по стране
-GET  /api/warehouse/dashboard            — данные главного экрана
+GET /warehouses              — список складов
+GET /warehouses/{id}         — склад по ID
+GET /warehouses/{id}/stats   — статистика склада
+GET /stats/country           — статистика по стране
 ```
 
-### Инвентаризация
+### Дашборд
 ```
-GET  /api/warehouse/inventory?warehouse_id=           — остатки
-GET  /api/warehouse/inventory/low-stock?warehouse_id= — низкий остаток (≤5 кор.)
-GET  /api/warehouse/inventory/movements?warehouse_id= — история движений
+GET /dashboard               — данные главного экрана по своему складу
 ```
 
-### Выдачи
+### Остатки
 ```
-POST /api/warehouse/dispatch                  — создать выдачу
-GET  /api/warehouse/dispatch?warehouse_id=&driver_id= — список выдач
-GET  /api/warehouse/dispatch/{id}             — выдача по ID
-PUT  /api/warehouse/dispatch/{id}/status      — изменить статус
+GET /inventory               — остатки своего склада
+GET /inventory/low-stock     — низкий остаток (≤5 кор.) своего склада
+GET /inventory/movements     — история движений своего склада
+```
+
+### Выдача
+```
+POST /dispatch               — создать выдачу
+GET  /dispatch?driver_id=    — список выдач своего склада, опционально по водителю
+GET  /dispatch/{id}          — выдача по ID в своем складе
+PUT  /dispatch/{id}/status   — изменить статус выдачи
+POST /dispatch/{id}/confirm  — подтверждение из drivers-service
 ```
 
 ### Касса
 ```
-GET  /api/warehouse/cashbox/balance?warehouse_id=      — баланс кассы
-GET  /api/warehouse/cashbox/transactions?warehouse_id= — операции кассы
+GET  /cashbox/balance          — баланс кассы своего склада
+GET  /cashbox/transactions     — операции кассы своего склада
+POST /cashbox/driver-payment   — платеж водителя
+POST /cashbox/factory-payment  — платеж заводу
+```
+
+### Возвраты
+```
+POST /returns                — форвард возврата в drivers-service
 ```
 
 ### WebSocket тест-триггеры (Swagger)

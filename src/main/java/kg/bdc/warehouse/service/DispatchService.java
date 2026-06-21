@@ -131,15 +131,21 @@ public class DispatchService {
     }
 
     public DispatchDto getById(Long id) {
-        return dispatchRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new NoSuchElementException("Выдача не найдена: " + id));
+        return toDto(findDispatch(id, null));
+    }
+
+    public DispatchDto getById(Long id, Long warehouseId) {
+        return toDto(findDispatch(id, warehouseId));
     }
 
     @Transactional
     public DispatchDto updateStatus(Long id, UpdateDispatchStatusRequest req) {
-        Dispatch dispatch = dispatchRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Выдача не найдена: " + id));
+        return updateStatus(id, req, null);
+    }
+
+    @Transactional
+    public DispatchDto updateStatus(Long id, UpdateDispatchStatusRequest req, Long warehouseId) {
+        Dispatch dispatch = findDispatch(id, warehouseId);
 
         String newStatus = req.getStatus();
         if (!List.of("CREATED", "ISSUED", "CANCELED").contains(newStatus)) {
@@ -152,8 +158,32 @@ public class DispatchService {
         return toDto(saved);
     }
 
+    @Transactional
+    public DispatchDto confirm(Long id, Long warehouseId) {
+        Dispatch dispatch = findDispatch(id, warehouseId);
+        if ("CANCELED".equals(dispatch.getStatus())) {
+            throw new IllegalStateException("Нельзя подтвердить отмененную выдачу: " + id);
+        }
+        if (!"ISSUED".equals(dispatch.getStatus())) {
+            dispatch.setStatus("ISSUED");
+            dispatch = dispatchRepository.save(dispatch);
+            wsService.notifyDashboardUpdated();
+        }
+        return toDto(dispatch);
+    }
+
     private String generateInvoice() {
         return "INV-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+    }
+
+    private Dispatch findDispatch(Long id, Long warehouseId) {
+        Dispatch dispatch = dispatchRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Выдача не найдена: " + id));
+        if (warehouseId != null
+                && (dispatch.getWarehouse() == null || !warehouseId.equals(dispatch.getWarehouse().getId()))) {
+            throw new NoSuchElementException("Выдача не найдена на складе: " + id);
+        }
+        return dispatch;
     }
 
     private DispatchDto toDto(Dispatch d) {

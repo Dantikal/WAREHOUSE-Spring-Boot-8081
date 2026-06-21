@@ -6,9 +6,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import kg.bdc.warehouse.dto.*;
 import kg.bdc.warehouse.service.DispatchService;
+import kg.bdc.warehouse.service.WarehouseContextService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import java.util.List;
 public class DispatchController {
 
     private final DispatchService dispatchService;
+    private final WarehouseContextService warehouseContextService;
 
     @PostMapping
     @Operation(
@@ -46,7 +49,11 @@ public class DispatchController {
             @ApiResponse(responseCode = "404", description = "Склад / водитель / товар не найден")
         }
     )
-    public ResponseEntity<DispatchDto> create(@RequestBody CreateDispatchRequest request) {
+    public ResponseEntity<DispatchDto> create(
+            HttpServletRequest servletRequest,
+            @Valid @RequestBody CreateDispatchRequest request) {
+        Long warehouseId = warehouseContextService.requireWarehouseId(servletRequest, request.getWarehouseId());
+        request.setWarehouseId(warehouseId);
         DispatchDto result = dispatchService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
@@ -61,8 +68,9 @@ public class DispatchController {
         }
     )
     public ResponseEntity<List<DispatchDto>> getDispatches(
-            @Parameter(description = "ID склада", example = "1") @RequestParam(value = "warehouse_id", required = false) Long warehouseId,
+            HttpServletRequest request,
             @Parameter(description = "ID водителя", example = "5") @RequestParam(value = "driver_id", required = false) Long driverId) {
+        Long warehouseId = warehouseContextService.requireWarehouseId(request);
         return ResponseEntity.ok(dispatchService.getDispatches(warehouseId, driverId));
     }
 
@@ -77,8 +85,10 @@ public class DispatchController {
         }
     )
     public ResponseEntity<DispatchDto> getById(
+            HttpServletRequest request,
             @Parameter(description = "ID выдачи", example = "1") @PathVariable Long id) {
-        return ResponseEntity.ok(dispatchService.getById(id));
+        Long warehouseId = warehouseContextService.requireWarehouseId(request);
+        return ResponseEntity.ok(dispatchService.getById(id, warehouseId));
     }
 
     @PutMapping("/{id}/status")
@@ -99,8 +109,29 @@ public class DispatchController {
         }
     )
     public ResponseEntity<DispatchDto> updateStatus(
+            HttpServletRequest servletRequest,
             @Parameter(description = "ID выдачи", example = "1") @PathVariable Long id,
-            @RequestBody UpdateDispatchStatusRequest request) {
-        return ResponseEntity.ok(dispatchService.updateStatus(id, request));
+            @Valid @RequestBody UpdateDispatchStatusRequest request) {
+        Long warehouseId = warehouseContextService.requireWarehouseId(servletRequest);
+        return ResponseEntity.ok(dispatchService.updateStatus(id, request, warehouseId));
+    }
+
+    @PostMapping("/{id}/confirm")
+    @Operation(
+        summary = "Подтвердить выдачу",
+        description = "Подтверждает выдачу со стороны drivers-service. Идемпотентно переводит выдачу в статус `ISSUED`.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Выдача подтверждена",
+                content = @Content(schema = @Schema(implementation = DispatchDto.class))),
+            @ApiResponse(responseCode = "404", description = "Выдача не найдена")
+        }
+    )
+    public ResponseEntity<DispatchDto> confirm(
+            HttpServletRequest request,
+            @Parameter(description = "ID выдачи", example = "1") @PathVariable Long id) {
+        Long warehouseId = warehouseContextService.resolveWarehouseId(request)
+                .map(warehouseContextService::validateWarehouseId)
+                .orElse(null);
+        return ResponseEntity.ok(dispatchService.confirm(id, warehouseId));
     }
 }

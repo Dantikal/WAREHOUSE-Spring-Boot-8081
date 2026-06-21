@@ -41,6 +41,9 @@ springdoc:
 server:
   port: 8080
 
+drivers-service:
+  returns-url: http://localhost:8082/api/drivers/returns
+
 logging:
   level:
     kg.bdc: DEBUG

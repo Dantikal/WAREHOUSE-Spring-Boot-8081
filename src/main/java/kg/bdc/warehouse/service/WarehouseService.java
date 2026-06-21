@@ -96,6 +96,27 @@ public class WarehouseService {
                 .build();
     }
 
+    public DashboardDto getDashboard(Long warehouseId) {
+        warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new NoSuchElementException("Склад не найден: " + warehouseId));
+
+        BigDecimal cashBalance = cashboxRepository.findByWarehouseId(warehouseId)
+                .map(c -> c.getCurrentBalance())
+                .orElse(BigDecimal.ZERO);
+        BigDecimal factoryDebt = debtRepository.sumFactoryDebtByWarehouse(warehouseId);
+        BigDecimal driversDebt = debtRepository.sumDriverDebtByWarehouse(warehouseId);
+        Long lowStock = inventoryRepository.countLowStock(warehouseId);
+        Long newOrders = dispatchRepository.countNewByWarehouse(warehouseId);
+
+        return DashboardDto.builder()
+                .cashBalance(cashBalance)
+                .factoryDebt(factoryDebt)
+                .totalDriversDebt(driversDebt)
+                .lowStockProducts(lowStock)
+                .newOrders(newOrders)
+                .build();
+    }
+
     private WarehouseDto toDto(Warehouse w) {
         return WarehouseDto.builder()
                 .id(w.getId())

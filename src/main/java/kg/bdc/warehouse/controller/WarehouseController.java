@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import kg.bdc.warehouse.dto.*;
+import kg.bdc.warehouse.service.WarehouseContextService;
 import kg.bdc.warehouse.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.List;
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
+    private final WarehouseContextService warehouseContextService;
 
     @GetMapping("/warehouses")
     @Operation(
@@ -87,7 +90,8 @@ public class WarehouseController {
                 content = @Content(schema = @Schema(implementation = DashboardDto.class)))
         }
     )
-    public ResponseEntity<DashboardDto> getDashboard() {
-        return ResponseEntity.ok(warehouseService.getDashboard());
+    public ResponseEntity<DashboardDto> getDashboard(HttpServletRequest request) {
+        Long warehouseId = warehouseContextService.requireWarehouseId(request);
+        return ResponseEntity.ok(warehouseService.getDashboard(warehouseId));
     }
 }

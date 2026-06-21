@@ -13,9 +13,16 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
     @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Debt d WHERE d.warehouse.id = :warehouseId AND d.debtType = 'FACTORY_DEBT'")
     BigDecimal sumFactoryDebtByWarehouse(@Param("warehouseId") Long warehouseId);
 
+    @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Debt d WHERE d.warehouse.id = :warehouseId AND d.debtType = 'DRIVER_DEBT'")
+    BigDecimal sumDriverDebtByWarehouse(@Param("warehouseId") Long warehouseId);
+
     @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Debt d WHERE d.debtType = 'FACTORY_DEBT'")
     BigDecimal sumAllFactoryDebt();
 
     @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Debt d WHERE d.debtType = 'DRIVER_DEBT'")
     BigDecimal sumAllDriverDebt();
+
+    Optional<Debt> findByWarehouseIdAndDriverIdAndDebtType(Long warehouseId, Long driverId, String debtType);
+
+    Optional<Debt> findByWarehouseIdAndDriverIsNullAndDebtType(Long warehouseId, String debtType);
 }
