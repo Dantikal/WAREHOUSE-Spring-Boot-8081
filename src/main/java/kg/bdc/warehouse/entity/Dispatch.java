@@ -5,6 +5,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "dispatch")
@@ -20,6 +21,9 @@ public class Dispatch {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "driver_id")
     private Driver driver;
+
+    @Column(name = "order_id")
+    private UUID orderId;
 
     @Column(name = "invoice_number")
     private String invoiceNumber;

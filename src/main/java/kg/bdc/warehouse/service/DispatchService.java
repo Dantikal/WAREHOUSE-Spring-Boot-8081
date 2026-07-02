@@ -26,6 +26,7 @@ public class DispatchService {
     private final WarehouseRepository warehouseRepository;
     private final InventoryMovementRepository movementRepository;
     private final WebSocketNotificationService wsService;
+    private final WarehouseDispatchEventPublisher dispatchEventPublisher;
 
     @Transactional
     public DispatchDto create(CreateDispatchRequest req) {
@@ -38,6 +39,7 @@ public class DispatchService {
         Dispatch dispatch = Dispatch.builder()
                 .warehouse(warehouse)
                 .driver(driver)
+                .orderId(req.getOrderId())
                 .invoiceNumber(generateInvoice())
                 .status("CREATED")
                 .dispatchDate(LocalDateTime.now())
@@ -112,6 +114,7 @@ public class DispatchService {
         // Notify WebSocket
         wsService.notifyDispatchCreated(saved.getId());
         wsService.notifyDashboardUpdated();
+        dispatchEventPublisher.publishCreated(saved);
 
         return toDto(saved);
     }
@@ -205,6 +208,7 @@ public class DispatchService {
                 .id(d.getId())
                 .warehouseId(d.getWarehouse() != null ? d.getWarehouse().getId() : null)
                 .driverId(d.getDriver() != null ? d.getDriver().getId() : null)
+                .orderId(d.getOrderId())
                 .driverName(d.getDriver() != null ? d.getDriver().getFullName() : null)
                 .invoiceNumber(d.getInvoiceNumber())
                 .totalAmount(d.getTotalAmount())

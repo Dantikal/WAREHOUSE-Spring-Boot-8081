@@ -1,0 +1,1 @@
+ALTER TABLE dispatch ADD COLUMN IF NOT EXISTS order_id UUID;
