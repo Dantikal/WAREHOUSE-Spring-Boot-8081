@@ -49,13 +49,13 @@ public class DispatchService {
         BigDecimal total = BigDecimal.ZERO;
 
         for (DispatchItemRequest itemReq : req.getItems()) {
-            Product product = productRepository.findById(itemReq.getProductId())
+            Product product = productRepository.findByUuid(itemReq.getProductId())
                     .orElseThrow(() -> new NoSuchElementException("Продукт не найден: " + itemReq.getProductId()));
 
             // Reduce inventory
             Inventory inventory = inventoryRepository.findByWarehouseId(req.getWarehouseId())
                     .stream()
-                    .filter(inv -> inv.getProduct().getId().equals(itemReq.getProductId()))
+                    .filter(inv -> inv.getProduct().getUuid().equals(itemReq.getProductId()))
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("Товар отсутствует на складе: " + product.getName()));
 
@@ -80,6 +80,7 @@ public class DispatchService {
             DispatchItem di = DispatchItem.builder()
                     .dispatch(dispatch)
                     .product(product)
+                    .productUuid(product.getUuid())
                     .quantityBoxes(boxes)
                     .quantityPieces(pieces)
                     .price(product.getDriverPrice())
@@ -195,7 +196,7 @@ public class DispatchService {
             items = d.getItems().stream()
                     .map(i -> DispatchItemDto.builder()
                             .id(i.getId())
-                            .productId(i.getProduct().getId())
+                            .productId(i.getProduct().getUuid())
                             .productName(i.getProduct().getName())
                             .quantityBoxes(i.getQuantityBoxes())
                             .quantityPieces(i.getQuantityPieces())

@@ -3,6 +3,7 @@ package kg.bdc.warehouse.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Entity
 @Table(name = "dispatch_item")
@@ -18,6 +19,9 @@ public class DispatchItem {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id")
     private Product product;
+
+    @Column(name = "product_uuid")
+    private UUID productUuid;
 
     @Column(name = "quantity_boxes")
     private Integer quantityBoxes;

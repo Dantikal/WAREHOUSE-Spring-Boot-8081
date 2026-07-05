@@ -5,6 +5,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "product")
@@ -12,6 +13,10 @@ import java.time.LocalDateTime;
 public class Product {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(name = "uuid", unique = true)
+    private UUID uuid;
+    
     private String barcode;
     private String name;
     @Column(name = "pieces_per_box")
