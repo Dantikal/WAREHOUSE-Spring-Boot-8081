@@ -19,6 +19,9 @@ public class ReturnsService {
     @Value("${drivers-service.returns-url:http://localhost:8082/api/drivers/returns}")
     private String returnsUrl;
 
+    @Value("${internal.api-key:}")
+    private String internalApiKey;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public ResponseEntity<Object> forwardReturn(Long warehouseId, Map<String, Object> body, HttpServletRequest request) {
@@ -31,9 +34,8 @@ public class ReturnsService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorization != null && !authorization.isBlank()) {
-            headers.set(HttpHeaders.AUTHORIZATION, authorization);
+        if (internalApiKey != null && !internalApiKey.isBlank()) {
+            headers.set("X-Api-Key", internalApiKey);
         }
 
         try {
