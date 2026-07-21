@@ -120,6 +120,7 @@ public class WarehouseService {
     private WarehouseDto toDto(Warehouse w) {
         return WarehouseDto.builder()
                 .id(w.getId())
+                .externalUuid(w.getExternalUuid())
                 .name(w.getName())
                 .address(w.getAddress())
                 .build();

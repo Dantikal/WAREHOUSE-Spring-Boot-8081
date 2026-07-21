@@ -12,6 +12,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,32 +24,24 @@ public class WarehouseContextService {
     private final WarehouseRepository warehouseRepository;
 
     public Long requireWarehouseId(HttpServletRequest request) {
-        Long warehouseId = resolveWarehouseId(request)
+        UUID externalUuid = resolveWarehouseId(request)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Не удалось определить склад. Передайте X-Warehouse-Id или JWT claim warehouse_id/warehouseId"));
-        return validateWarehouseId(warehouseId);
+        return warehouseRepository.findByExternalUuid(externalUuid)
+                .map(warehouse -> warehouse.getId())
+                .orElseThrow(() -> new NoSuchElementException("Склад не найден: " + externalUuid));
     }
 
-    public Optional<Long> resolveWarehouseId(HttpServletRequest request) {
+    public Optional<UUID> resolveWarehouseId(HttpServletRequest request) {
         String headerWarehouseId = request.getHeader("X-Warehouse-Id");
         if (headerWarehouseId != null) {
-            return Optional.of(parseWarehouseId(headerWarehouseId)
+            return Optional.of(parseWarehouseUuid(headerWarehouseId)
                     .orElseThrow(() -> new IllegalArgumentException("Некорректный X-Warehouse-Id")));
         }
         return resolveFromAuthorization(request.getHeader("Authorization"));
     }
 
-    public Long validateWarehouseId(Long warehouseId) {
-        if (warehouseId == null || warehouseId <= 0) {
-            throw new IllegalArgumentException("Некорректный ID склада");
-        }
-        if (!warehouseRepository.existsById(warehouseId)) {
-            throw new NoSuchElementException("Склад не найден: " + warehouseId);
-        }
-        return warehouseId;
-    }
-
-    private Optional<Long> resolveFromAuthorization(String authorization) {
+    private Optional<UUID> resolveFromAuthorization(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return Optional.empty();
         }
@@ -63,30 +56,27 @@ public class WarehouseContextService {
             byte[] decodedPayload = Base64.getUrlDecoder().decode(parts[1]);
             String jsonPayload = new String(decodedPayload, StandardCharsets.UTF_8);
             Map<String, Object> claims = objectMapper.readValue(jsonPayload, CLAIMS_TYPE);
-            return parseWarehouseId(claims.get("warehouse_id"))
-                    .or(() -> parseWarehouseId(claims.get("warehouseId")));
+            return parseWarehouseUuid(claims.get("warehouse_id"))
+                    .or(() -> parseWarehouseUuid(claims.get("warehouseId")));
         } catch (Exception ignored) {
             return Optional.empty();
         }
     }
 
-    private Optional<Long> parseWarehouseId(Object value) {
-        if (value instanceof Number number) {
-            return Optional.of(number.longValue()).filter(id -> id > 0);
-        }
+    private Optional<UUID> parseWarehouseUuid(Object value) {
         if (value instanceof String string) {
-            return parseWarehouseId(string);
+            return parseWarehouseUuid(string);
         }
         return Optional.empty();
     }
 
-    private Optional<Long> parseWarehouseId(String value) {
+    private Optional<UUID> parseWarehouseUuid(String value) {
         if (value == null || value.isBlank()) {
             return Optional.empty();
         }
         try {
-            return Optional.of(Long.parseLong(value.trim())).filter(id -> id > 0);
-        } catch (NumberFormatException ignored) {
+            return Optional.of(UUID.fromString(value.trim()));
+        } catch (IllegalArgumentException ignored) {
             return Optional.empty();
         }
     }
