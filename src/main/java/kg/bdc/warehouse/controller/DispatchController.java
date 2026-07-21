@@ -52,7 +52,7 @@ public class DispatchController {
     public ResponseEntity<DispatchDto> create(
             HttpServletRequest servletRequest,
             @Valid @RequestBody CreateDispatchRequest request) {
-        Long warehouseId = warehouseContextService.requireWarehouseId(servletRequest, request.getWarehouseId());
+        Long warehouseId = warehouseContextService.requireWarehouseId(servletRequest);
         request.setWarehouseId(warehouseId);
         DispatchDto result = dispatchService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
@@ -129,9 +129,7 @@ public class DispatchController {
     public ResponseEntity<DispatchDto> confirm(
             HttpServletRequest request,
             @Parameter(description = "ID выдачи", example = "1") @PathVariable Long id) {
-        Long warehouseId = warehouseContextService.resolveWarehouseId(request)
-                .map(warehouseContextService::validateWarehouseId)
-                .orElse(null);
+        Long warehouseId = warehouseContextService.requireWarehouseId(request);
         return ResponseEntity.ok(dispatchService.confirm(id, warehouseId));
     }
 }

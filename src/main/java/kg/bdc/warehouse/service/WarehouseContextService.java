@@ -23,22 +23,19 @@ public class WarehouseContextService {
     private final WarehouseRepository warehouseRepository;
 
     public Long requireWarehouseId(HttpServletRequest request) {
-        return requireWarehouseId(request, null);
-    }
-
-    public Long requireWarehouseId(HttpServletRequest request, Long fallbackWarehouseId) {
         Long warehouseId = resolveWarehouseId(request)
-                .or(() -> parseWarehouseId(fallbackWarehouseId))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Не удалось определить склад. Передайте X-Warehouse-Id или JWT claim warehouse_id/warehouseId"));
         return validateWarehouseId(warehouseId);
     }
 
     public Optional<Long> resolveWarehouseId(HttpServletRequest request) {
-        return parseWarehouseId(request.getHeader("X-Warehouse-Id"))
-                .or(() -> parseWarehouseId(request.getHeader("X-Warehouse-ID")))
-                .or(() -> resolveFromAuthorization(request.getHeader("Authorization")))
-                .or(() -> parseWarehouseId(request.getParameter("warehouse_id")));
+        String headerWarehouseId = request.getHeader("X-Warehouse-Id");
+        if (headerWarehouseId != null) {
+            return Optional.of(parseWarehouseId(headerWarehouseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Некорректный X-Warehouse-Id")));
+        }
+        return resolveFromAuthorization(request.getHeader("Authorization"));
     }
 
     public Long validateWarehouseId(Long warehouseId) {
