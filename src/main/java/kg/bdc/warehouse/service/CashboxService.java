@@ -44,7 +44,7 @@ public class CashboxService {
         validateAmount(req.getAmount());
 
         Warehouse warehouse = getWarehouse(warehouseId);
-        Driver driver = driverRepository.findById(req.getDriverId())
+        Driver driver = driverRepository.findByUuid(req.getDriverId())
                 .orElseThrow(() -> new NoSuchElementException("Водитель не найден: " + req.getDriverId()));
         Cashbox cashbox = getCashbox(warehouseId);
 

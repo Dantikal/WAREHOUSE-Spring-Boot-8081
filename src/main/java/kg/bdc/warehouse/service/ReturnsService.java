@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReturnsService {
 
-    @Value("${drivers-service.returns-url:http://localhost:8082/api/drivers/returns}")
+    @Value("${drivers-service.returns-url}")
     private String returnsUrl;
 
     @Value("${internal.api-key:}")
