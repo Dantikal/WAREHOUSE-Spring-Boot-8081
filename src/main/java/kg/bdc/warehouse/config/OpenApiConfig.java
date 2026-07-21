@@ -3,7 +3,6 @@ package kg.bdc.warehouse.config;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +29,7 @@ public class OpenApiConfig {
                                 
                                 ### WebSocket подключение:
                                 ```
-                                ws://localhost:8080/ws
+                                /ws  (используйте ws:// или wss:// текущего хоста)
                                 Subscribe: /topic/dashboard/update
                                 Subscribe: /topic/inventory/low-stock
                                 Subscribe: /topic/dispatch/created
@@ -41,8 +40,6 @@ public class OpenApiConfig {
                         .contact(new Contact()
                                 .name("BDC Development Team")
                                 .email("dev@bdc.kg")))
-                .servers(List.of(
-                        new Server().url("http://localhost:8080").description("Local Development")))
                 .tags(List.of(
                         new Tag().name("Warehouses").description("Управление складами"),
                         new Tag().name("Inventory").description("Остатки и движение товаров"),

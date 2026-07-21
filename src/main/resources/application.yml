@@ -42,7 +42,7 @@ server:
   port: 8080
 
 drivers-service:
-  returns-url: ${DRIVERS_RETURNS_URL:http://localhost:15031/api/drivers/returns}
+  returns-url: ${DRIVERS_RETURNS_URL}
 
 logging:
   level:

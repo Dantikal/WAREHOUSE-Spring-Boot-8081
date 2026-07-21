@@ -17,7 +17,7 @@ import java.util.Map;
  * WebSocket endpoints documentation + manual trigger endpoints for testing.
  *
  * Real connections:
- *   WS Endpoint: ws://localhost:8080/ws
+ *   WS Endpoint: /ws on the current host (ws:// or wss://)
  *   Subscribe to /topic/dashboard/update
  *   Subscribe to /topic/inventory/low-stock
  *   Subscribe to /topic/dispatch/created
@@ -31,8 +31,8 @@ import java.util.Map;
         
         **Подключение:**
         ```
-        ws://localhost:8080/ws
-        ws://localhost:8080/ws/websocket  (без SockJS)
+        /ws
+        /ws/websocket  (без SockJS)
         ```
         
         **Топики для подписки:**
